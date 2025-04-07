@@ -47,3 +47,32 @@ La función computeFirst(symbol) funciona así:
     Regla 2: Si hay una producción B -> α A β, entonces todo en FIRST(β) (excepto ε) va a FOLLOW(A).
 
     Regla 3: Si B -> α A o B -> α A β y FIRST(β) contiene ε, entonces FOLLOW(B) va a FOLLOW(A).
+
+
+### Arquitectura final detallada: 
+
+explicación de la arquitectura y entrada
+
+Para esta implementación en C++, desarrollamos un programa que calcula los conjuntos FIRST y FOLLOW de una gramática libre de contexto. Nuestra arquitectura sigue estos principios:
+
+    Input: El programa recibe una gramática a través de un archivo de texto plano (gramatica.txt) donde cada línea representa una regla de producción en el formato:
+
+S   -> NP VP
+VP  -> VP PP | V NP | eats
+...
+
+Parsing: Las reglas son leídas y almacenadas en una estructura tipo diccionario (map<string, vector<vector<string>>>), donde la clave es el no terminal y los valores son las diferentes producciones.
+
+Identificación de terminales y no terminales: Los no terminales son los lados izquierdos de las producciones. Todo símbolo que aparece en el lado derecho pero no es no terminal, se considera terminal (excepto el símbolo especial ε).
+
+FIRST: Se calcula de manera recursiva, siguiendo las reglas conocidas: si una producción empieza con un terminal, se agrega directamente; si empieza con un no terminal, se calcula su FIRST recursivamente. Si hay secuencias, se propagan correctamente y se considera ε.
+
+FOLLOW: Se calcula de forma iterativa hasta que ya no haya cambios en los conjuntos. Se consideran las reglas estándar:
+
+    El símbolo inicial recibe $.
+
+    Si un símbolo A es seguido por una secuencia β, se agrega FIRST(β) - ε a FOLLOW(A).
+
+    Si β puede derivar a ε, se agrega FOLLOW del símbolo de la izquierda también.
+
+Output: Se imprimen en consola los conjuntos FIRST y FOLLOW de cada no terminal.
