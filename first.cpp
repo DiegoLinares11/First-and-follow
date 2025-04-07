@@ -10,9 +10,13 @@ using namespace std;
 
 map<string, vector<vector<string>>> grammar;
 map<string, set<string>> firstSet;
+map<string, set<string>> followSet;
 set<string> nonTerminals;
 set<string> terminals;
 const string EPSILON = "ε";
+const string END_MARKER = "$";
+
+string startSymbol;
 
 void parseGrammar(const string& filename) {
     ifstream file(filename);
@@ -20,7 +24,8 @@ void parseGrammar(const string& filename) {
         cerr << "Error al abrir el archivo: " << filename << endl;
         exit(1);
     }
-
+    
+    //bool isFirstLine = true;   // Esto que esta comenado aca es para poder leer desde el archivo el simbolo inicial. 
     string line;
     while (getline(file, line)) {
         if (line.empty()) continue;
@@ -28,6 +33,12 @@ void parseGrammar(const string& filename) {
         string lhs, arrow, token;
         iss >> lhs >> arrow;
 
+        /*
+        if (isFirstLine) {
+            startSymbol = lhs; 
+            isFirstLine = false;
+        }*/
+        
         if (arrow != "->") {
             cerr << "Error de sintaxis: se esperaba '->' en: " << line << endl;
             continue;
@@ -85,12 +96,12 @@ set<string> computeFirst(const string& symbol) {
         bool addEpsilon = true;
 
         for (const string& sym : production) {
-            if (sym == symbol) break;  // prevenir recursión infinita directa
+            if (sym == symbol) break;
             set<string> temp = computeFirst(sym);
 
-            for (const string& t : temp) {
-                if (t != EPSILON) result.insert(t);
-            }
+            for (const string& t : temp)
+                if (t != EPSILON)
+                    result.insert(t);
 
             if (!temp.count(EPSILON)) {
                 addEpsilon = false;
@@ -105,6 +116,68 @@ set<string> computeFirst(const string& symbol) {
     return result;
 }
 
+set<string> firstOfSequence(const vector<string>& sequence, size_t start = 0) {
+    set<string> result;
+    bool addEpsilon = true;
+
+    for (size_t i = start; i < sequence.size(); ++i) {
+        set<string> temp = computeFirst(sequence[i]);
+        for (const string& t : temp)
+            if (t != EPSILON)
+                result.insert(t);
+
+        if (!temp.count(EPSILON)) {
+            addEpsilon = false;
+            break;
+        }
+    }
+
+    if (addEpsilon) result.insert(EPSILON);
+    return result;
+}
+
+void computeFollow(const string& startSymbol) {
+    followSet[startSymbol].insert(END_MARKER); // Regla 1
+
+    bool changed = true;
+    while (changed) {
+        changed = false;
+
+        for (const auto& [lhs, productions] : grammar) {
+            for (const auto& prod : productions) {
+                for (size_t i = 0; i < prod.size(); ++i) {
+                    const string& B = prod[i];
+                    if (!nonTerminals.count(B)) continue;
+
+                    set<string> trailer;
+
+                    if (i + 1 < prod.size()) {
+                        auto firstBeta = firstOfSequence(prod, i + 1);
+                        size_t oldSize = followSet[B].size();
+                        for (const string& f : firstBeta)
+                            if (f != EPSILON)
+                                followSet[B].insert(f);
+
+                        if (firstBeta.count(EPSILON)) {
+                            for (const string& f : followSet[lhs])
+                                followSet[B].insert(f);
+                        }
+
+                        if (followSet[B].size() > oldSize)
+                            changed = true;
+                    } else {
+                        size_t oldSize = followSet[B].size();
+                        for (const string& f : followSet[lhs])
+                            followSet[B].insert(f);
+                        if (followSet[B].size() > oldSize)
+                            changed = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void printFirstSets() {
     cout << "\n== FIRST Sets ==\n";
     for (const string& nt : nonTerminals) {
@@ -115,13 +188,28 @@ void printFirstSets() {
     }
 }
 
+void printFollowSets() {
+    cout << "\n== FOLLOW Sets ==\n";
+    for (const string& nt : nonTerminals) {
+        cout << "FOLLOW(" << nt << ") = { ";
+        for (const string& f : followSet[nt]) cout << f << " ";
+        cout << "}\n";
+    }
+}
+
 int main() {
     parseGrammar("gramatica.txt");
 
-    for (const string& nt : nonTerminals) {
+    for (const string& nt : nonTerminals)
         computeFirst(nt);
-    }
+
+    //aca no se si dejarlo asi o deberia leerlo del archivo, porque el simbolo inicial siempre es el primero va???
+    // O puede ir cambiando? si siempre es el primero pues si se puede leer del archivo
+    string startSymbol = "S"; 
+    computeFollow(startSymbol);
 
     printFirstSets();
+    printFollowSets();
+
     return 0;
 }

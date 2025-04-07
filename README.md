@@ -36,3 +36,14 @@ La función computeFirst(symbol) funciona así:
     Memoización:
 
         Se guarda FIRST(symbol) ya calculado para evitar recalculaciones.
+
+
+### Algoritmo de follow
+
+ Reglas generales para calcular FOLLOW(A)
+
+    Regla 1: Si A es el símbolo inicial → FOLLOW(A) contiene $ (fin de cadena).
+
+    Regla 2: Si hay una producción B -> α A β, entonces todo en FIRST(β) (excepto ε) va a FOLLOW(A).
+
+    Regla 3: Si B -> α A o B -> α A β y FIRST(β) contiene ε, entonces FOLLOW(B) va a FOLLOW(A).
