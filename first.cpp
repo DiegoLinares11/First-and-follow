@@ -197,6 +197,37 @@ void printFollowSets() {
     }
 }
 
+void exportFirstFollowSets(const string& filename) {
+    ofstream out(filename);
+    if (!out.is_open()) {
+        cerr << "No se pudo abrir el archivo de salida: " << filename << endl;
+        return;
+    }
+
+    out << "== FIRST Sets ==\n";
+    for (const string& nt : nonTerminals) {
+        const auto& firsts = firstSet[nt];
+        out << "FIRST(" << nt << ") = { ";
+        for (const string& f : firsts)
+            out << f << " ";
+        out << "}\n";
+    }
+
+    out << "\n== FOLLOW Sets ==\n";
+    for (const string& nt : nonTerminals) {
+        const auto& follows = followSet[nt];
+        out << "FOLLOW(" << nt << ") = { ";
+        for (const string& f : follows)
+            out << f << " ";
+        out << "}\n";
+    }
+
+    out.close();
+    cout << "\nConjuntos FIRST y FOLLOW exportados a '" << filename << "'\n";
+}
+
+
+
 int main() {
     parseGrammar("gramatica.txt");
 
@@ -210,6 +241,7 @@ int main() {
 
     printFirstSets();
     printFollowSets();
-
+    exportFirstFollowSets("first_follow_output.txt");
+    
     return 0;
 }
