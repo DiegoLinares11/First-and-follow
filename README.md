@@ -1,6 +1,8 @@
 # First and follow
 
 ## Estructura a seguir:
+[Link Repositorio](https://github.com/DiegoLinares11/First-and-follow.git)
+[Video Youtube](https://youtu.be/ST0EseFN_jA)
 
 grammar: Guarda las reglas como un mapa. Cada no terminal se asocia con una lista de producciones, donde cada producción es una lista de símbolos.
 
